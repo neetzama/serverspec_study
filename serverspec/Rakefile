@@ -1,0 +1,45 @@
+require 'rake'
+require 'rspec/core/rake_task'
+require 'aws-sdk'
+
+file = File.open('./lifecyclehook_host/host')
+lifecyclehook_host = file.read
+
+namespace :spec do
+  hosts = lifecyclehook_host
+  name = 'lifecyclehook'
+
+  task :all     => hosts
+  task :default => :all
+
+  desc "Run serverspec tests to #{hosts}"
+  RSpec::Core::RakeTask.new(name) do |t|
+    ENV['TARGET_HOST']   = name
+    ENV['TARGET_IP']   = hosts
+    t.pattern = "spec/payblog/*_spec.rb"
+  end
+end
+
+
+ec2 = Aws::EC2::Resource.new(region: 'ap-northeast-1')
+
+ec2.instances({filters: [{name: 'tag:Name', values: ['test-autoscaling-group']}]}).each do |i|
+  puts 'ID:       ' + i.id
+  puts 'State:    ' + i.state.name
+  puts 'PublicIp: ' + i.public_ip_address.to_s
+  
+  namespace :spec do
+    hosts = i.public_ip_address.to_s
+    name = 'AutoScalingGroup'
+
+    task :all     => hosts
+    task :default => :all
+
+    desc "Run serverspec tests to #{hosts}"
+    RSpec::Core::RakeTask.new(name) do |t|
+      ENV['TARGET_HOST']   = name
+      ENV['TARGET_IP']   = hosts
+      t.pattern = "spec/payblog/*_spec.rb"
+    end
+  end
+end
