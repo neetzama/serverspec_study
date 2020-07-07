@@ -23,7 +23,7 @@ end
 
 ec2 = Aws::EC2::Resource.new(region: 'ap-northeast-1')
 
-ec2.instances({filters: [{name: 'tag:Name', values: ['test-autoscaling-group']}]}).each do |i|
+ec2.instances({filters: [{name: 'tag:Name', values: ['test_autoscaling_group']}]}).each do |i|
   puts 'ID:       ' + i.id
   puts 'State:    ' + i.state.name
   puts 'PublicIp: ' + i.public_ip_address.to_s
