@@ -28,18 +28,20 @@ ec2.instances({filters: [{name: 'tag:Name', values: ['test_autoscaling_group']}]
   puts 'State:    ' + i.state.name
   puts 'PublicIp: ' + i.public_ip_address.to_s
   
-  namespace :spec do
-    hosts = i.public_ip_address.to_s
-    name = 'AutoScalingGroup'
+  if i.state.name == "running" then
+    namespace :spec do
+      hosts = i.public_ip_address.to_s
+      name = 'AutoScalingGroup'
 
-    task :all     => hosts
-    task :default => :all
+      task :all     => hosts
+      task :default => :all
 
-    desc "Run serverspec tests to #{hosts}"
-    RSpec::Core::RakeTask.new(name) do |t|
-      ENV['TARGET_HOST']   = name
-      ENV['TARGET_IP']   = hosts
-      t.pattern = "spec/payblog/*_spec.rb"
+      desc "Run serverspec tests to #{hosts}"
+      RSpec::Core::RakeTask.new(name) do |t|
+        ENV['TARGET_HOST']   = name
+        ENV['TARGET_IP']   = hosts
+        t.pattern = "spec/payblog/*_spec.rb"
+      end
     end
   end
 end
